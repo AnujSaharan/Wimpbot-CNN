@@ -9,20 +9,22 @@ model_weights_path = './models/weights.h5'
 model = load_model(model_path)
 model.load_weights(model_weights_path)
 
-def predict(file):
-  x = load_img(file, target_size=(img_width,img_height))
-  x = img_to_array(x)
-  x = np.expand_dims(x, axis=0)
-  array = model.predict(x)
-  result = array[0]
-  if result[0] > result[1]:
-    print("Predicted answer: Pizza")
-    answer = 'pizza'
-  else:
-    print("Predicted answer: Poodle")
-    answer = 'poodle'
 
-  return answer
+def predict(file):
+    x = load_img(file, target_size=(img_width, img_height))
+    x = img_to_array(x)
+    x = np.expand_dims(x, axis=0)
+    array = model.predict(x)
+    result = array[0]
+    if result[0] > result[1]:
+        print("Predicted answer: Pizza")
+        answer = 'pizza'
+    else:
+        print("Predicted answer: Poodle")
+        answer = 'poodle'
+
+    return answer
+
 
 tp = 0
 tn = 0
@@ -30,26 +32,26 @@ fp = 0
 fn = 0
 
 for i, ret in enumerate(os.walk('./test-data/poodle')):
-  for i, filename in enumerate(ret[2]):
-    if filename.startswith("."):
-      continue
-    print("Label: Poodle")
-    result = predict(ret[0] + '/' + filename)
-    if result == "poodle":
-      tn += 1
-    else:
-      fp += 1
+    for i, filename in enumerate(ret[2]):
+        if filename.startswith("."):
+            continue
+        print("Label: Poodle")
+        result = predict(ret[0] + '/' + filename)
+        if result == "poodle":
+            tn += 1
+        else:
+            fp += 1
 
 for i, ret in enumerate(os.walk('./test-data/pizza')):
-  for i, filename in enumerate(ret[2]):
-    if filename.startswith("."):
-      continue
-    print("Label: Pizza")
-    result = predict(ret[0] + '/' + filename)
-    if result == "pizza":
-      tp += 1
-    else:
-      fn += 1
+    for i, filename in enumerate(ret[2]):
+        if filename.startswith("."):
+            continue
+        print("Label: Pizza")
+        result = predict(ret[0] + '/' + filename)
+        if result == "pizza":
+            tp += 1
+        else:
+            fn += 1
 
 """
 Check metrics

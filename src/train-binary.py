@@ -1,26 +1,29 @@
-"""
-First, you need to collect training data and deploy it like this.
+'''
+Wimpbot CNN
+
+The following is a binary classifier written with Keras. The script expects a folder structure like so to train the model:
 
   ./data/
-    train/
-      pizza/
-        pizza1.jpg
-        pizza2.jpg
+    trainingData/
+      objectClassOne/
+        objectClassOne1.jpg
+        objectClassOne2.jpg
+        ...      
+      objectClassTwo/
+        objectClassTwo1.jpg
+        objectClassTwo2.jpg
         ...
-      poodle/
-        poodle1.jpg
-        poodle2.jpg
-        ...
-    validation/
-      pizza/
-        pizza1.jpg
-        pizza2.jpg
-        ...
-      poodle/
-        poodle1.jpg
-        poodle2.jpg
-        ...
-"""
+    
+    validationData/
+      objectClassOne/
+          objectClassOne1.jpg
+          objectClassOne2.jpg
+          ...
+        objectClassTwo/
+          objectClassTwo1.jpg
+          objectClassTwo2.jpg
+          ...
+'''
 
 import sys
 import os
@@ -31,23 +34,17 @@ from keras.layers import Dropout, Flatten, Dense, Activation
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras import callbacks
 
-DEV = False
 argvs = sys.argv
 argc = len(argvs)
 
-if argc > 1 and (argvs[1] == "--development" or argvs[1] == "-d"):
-  DEV = True
+# Specify path to the training data directory here
+trainingDataDirectory = './data/trainingData'
 
-if DEV:
-  epochs = 4
-else:
-  epochs = 20
+# Specify path to the validation data directory here
+validationDataDirectory = './data/validationData'
 
-
-train_data_dir = './data/train'
-validation_data_dir = './data/validation'
-
-img_width, img_height = 150, 150
+# Model Parameters
+imageWidth, imageHeight = 150, 150
 nb_train_samples = 2000
 nb_validation_samples = 800
 nb_filters1 = 32
@@ -60,13 +57,15 @@ batch_size = 32
 lr = 0.0004
 
 model = Sequential()
-model.add(Conv2D(nb_filters1, (conv1_size, conv1_size), padding="same", input_shape=(img_width, img_height, 3)))
+model.add(Conv2D(nb_filters1, (conv1_size, conv1_size),
+                 padding="same", input_shape=(imageWidth, imageHeight, 3)))
 model.add(Activation("relu"))
 model.add(MaxPooling2D(pool_size=(pool_size, pool_size)))
 
 model.add(Conv2D(nb_filters2, (conv2_size, conv2_size), padding="same"))
 model.add(Activation("relu"))
-model.add(MaxPooling2D(pool_size=(pool_size, pool_size), data_format='channels_first'))
+model.add(MaxPooling2D(pool_size=(pool_size, pool_size),
+                       data_format='channels_first'))
 
 model.add(Flatten())
 model.add(Dense(256))
@@ -88,20 +87,17 @@ test_datagen = ImageDataGenerator(
     rescale=1. / 255)
 
 train_generator = train_datagen.flow_from_directory(
-    train_data_dir,
-    target_size=(img_height, img_width),
+    trainingDataDirectory,
+    target_size=(imageHeight, imageWidth),
     batch_size=batch_size,
     class_mode='categorical')
 
 validation_generator = test_datagen.flow_from_directory(
-    validation_data_dir,
-    target_size=(img_height, img_width),
+    validationDataDirectory,
+    target_size=(imageHeight, imageWidth),
     batch_size=batch_size,
     class_mode='categorical')
 
-"""
-Tensorboard log
-"""
 log_dir = './tf-log/'
 tb_cb = callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 cbks = [tb_cb]
@@ -114,8 +110,13 @@ model.fit_generator(
     callbacks=cbks,
     validation_steps=nb_validation_samples)
 
-target_dir = './models/'
-if not os.path.exists(target_dir):
-  os.mkdir(target_dir)
+# Specify path to the directory where the model needs to be stored
+modelDirectory = './models/'
+
+# If modelDirectory does not exist, create it
+if not os.path.exists(modelDirectory):
+    os.mkdir(modelDirectory)
+
+# Save the trained model
 model.save('./models/model.h5')
 model.save_weights('./models/weights.h5')
